@@ -5,12 +5,11 @@ import (
 	"database/sql"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/bayuuat/go-sprint-1/domain"
 	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/bayuuat/go-sprint-1/internal/config"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/bayuuat/go-sprint-1/internal/utils"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -72,13 +71,8 @@ func (a userService) Authenticate(ctx context.Context, req dto.AuthReq) (dto.Aut
 		user = newUser
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
-		jwt.MapClaims{
-			"id":    user.Id,
-			"email": user.Email,
-			"exp":   time.Now().Add(time.Hour * 24).Unix(),
-		})
-	tokenString, err := token.SignedString([]byte(a.cnf.Secret.Jwt))
+	token, err := utils.GenerateToken(user)
+
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
 		return dto.AuthRes{}, http.StatusInternalServerError, err
@@ -93,26 +87,56 @@ func (a userService) Authenticate(ctx context.Context, req dto.AuthReq) (dto.Aut
 
 	return dto.AuthRes{
 		Email:       user.Email,
-		AccessToken: tokenString,
+		AccessToken: token,
 	}, status, nil
 }
 
-func (a userService) Validate(ctx context.Context, tokenString string) (dto.UserData, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(a.cnf.Secret.Jwt), nil
-	})
+func (a userService) GetUser(ctx context.Context, email string) (dto.UserData, int, error) {
+	user, err := a.userRepository.FindByEmail(ctx, email)
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
-		return dto.UserData{}, err
+		return dto.UserData{}, http.StatusInternalServerError, err
 	}
-	if token.Valid {
-		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			return dto.UserData{
-				Id:    claims["id"].(string),
-				Name:  claims["name"].(string),
-				Email: claims["email"].(string),
-			}, nil
-		}
+
+	return dto.UserData{
+		Id:              user.Id,
+		Email:           user.Email,
+		Name:            user.Name,
+		UserImageUri:    user.UserImageUri,
+		CompanyName:     user.CompanyName,
+		CompanyImageUri: user.CompanyImageUri,
+	}, http.StatusOK, nil
+}
+
+func (a userService) PatchUser(ctx context.Context, req dto.UpdateUserReq, email string) (dto.UserData, int, error) {
+	user, err := a.userRepository.FindByEmail(ctx, email)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.UserData{}, http.StatusInternalServerError, err
 	}
-	return dto.UserData{}, domain.ErrInvalidCredential
+
+	if user.Email == "" {
+		return dto.UserData{}, http.StatusNotFound, domain.ErrUserNotFound
+	}
+
+	user.Name = req.Name
+	user.Email = req.Email
+	user.UserImageUri = req.CompanyImageUri
+	user.CompanyName = req.CompanyName
+	user.CompanyImageUri = req.CompanyImageUri
+
+	err = a.userRepository.Update(ctx, &user)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.UserData{}, http.StatusInternalServerError, err
+	}
+
+	return dto.UserData{
+		Id:              user.Id,
+		Email:           user.Email,
+		Name:            user.Name,
+		UserImageUri:    user.UserImageUri,
+		CompanyName:     user.CompanyName,
+		CompanyImageUri: user.CompanyImageUri,
+	}, http.StatusOK, nil
 }

@@ -25,7 +25,7 @@ func (u userRepository) Save(ctx context.Context, user *domain.User) error {
 }
 
 func (u userRepository) Update(ctx context.Context, user *domain.User) error {
-	executor := u.db.Update("users").Set(user).Executor()
+	executor := u.db.Update("users").Where(goqu.C("id").Eq(user.Id)).Set(user).Executor()
 	_, err := executor.ExecContext(ctx)
 	return err
 }

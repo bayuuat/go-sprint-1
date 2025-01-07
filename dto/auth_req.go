@@ -1,9 +1,9 @@
 package dto
 
 type AuthReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Action   Action `json:"action"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
+	Action   Action `json:"action" validate:"required"`
 }
 
 type Action string

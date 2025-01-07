@@ -1,9 +1,8 @@
 package dto
 
-type UserData struct {
-	Id              string  `json:"id"`
+type UpdateUserReq struct {
+	Name            string  `json:"name"`
 	Email           string  `json:"email"`
-	Name            string  `json:"nameName"`
 	UserImageUri    *string `json:"user_image_uri"`
 	CompanyName     *string `json:"company_name"`
 	CompanyImageUri *string `json:"company_image_uri"`

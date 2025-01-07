@@ -8,12 +8,15 @@ import (
 )
 
 type User struct {
-	Id        string       `db:"id"`
-	Name      string       `db:"name"`
-	Email     string       `db:"email"`
-	Password  string       `db:"password"`
-	CreatedAt sql.NullTime `db:"created_at"`
-	UpdatedAt sql.NullTime `db:"updated_at"`
+	Id              string       `db:"id"`
+	Name            string       `db:"name"`
+	Email           string       `db:"email"`
+	Password        string       `db:"password"`
+	UserImageUri    *string      `db:"user_image_uri"`
+	CompanyName     *string      `db:"company_name"`
+	CompanyImageUri *string      `db:"company_image_uri"`
+	CreatedAt       sql.NullTime `db:"created_at"`
+	UpdatedAt       sql.NullTime `db:"updated_at"`
 }
 
 type UserRepository interface {
@@ -25,5 +28,6 @@ type UserRepository interface {
 
 type UserService interface {
 	Authenticate(ctx context.Context, req dto.AuthReq) (dto.AuthRes, int, error)
-	Validate(ctx context.Context, tokenString string) (dto.UserData, error)
+	GetUser(ctx context.Context, email string) (dto.UserData, int, error)
+	PatchUser(ctx context.Context, req dto.UpdateUserReq, email string) (dto.UserData, int, error)
 }
