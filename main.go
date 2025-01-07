@@ -11,15 +11,20 @@ import (
 
 func main() {
 	cnf := config.Get()
-
+	app := fiber.New()
 	dbConnection := connection.GetDatabase(cnf.Database)
 
 	userRepository := repository.NewUser(dbConnection)
 	authService := service.NewUser(cnf, userRepository)
-
-	app := fiber.New()
-
 	api.NewUser(app, authService)
+
+	departmentRepository := repository.NewDepartment(dbConnection)
+	departmentService := service.NewDepartment(cnf, departmentRepository)
+	api.NewDepartment(app, departmentService)
+
+	employeeRepository := repository.NewEmployee(dbConnection)
+	employeeService := service.NewEmployee(cnf, employeeRepository)
+	api.NewEmployee(app, employeeService)
 
 	_ = app.Listen(cnf.Server.Host + ":" + cnf.Server.Port)
 }
