@@ -24,8 +24,8 @@ Ensure you have the following installed:
 1. **Clone the repository:**
 
     ```sh
-    git clone https://github.com/shellrean/golang-base-project-clean-directory.git
-    cd golang-base-project-clean-directory
+    git clone git@github.com:bayuuat/go-sprint-1.git
+    cd go-sprint-1
     ```
 
 2. **Install dependencies:**
