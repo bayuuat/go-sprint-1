@@ -29,6 +29,9 @@ CREATE TABLE public.users (
     name character varying(255) NOT NULL,
     email character varying(255) NOT NULL,
     password character varying(255) NOT NULL,
+    user_image_uri character varying(255) DEFAULT NULL,
+    company_name character varying(255) DEFAULT NULL,
+    company_image_uri character varying(255) DEFAULT NULL,
     created_at timestamp(6) without time zone,
     updated_at timestamp(6) without time zone
 );

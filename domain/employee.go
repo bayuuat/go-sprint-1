@@ -15,13 +15,14 @@ type Employee struct {
 	DepartmentId     string       `db:"department_id"`
 	CreatedAt        sql.NullTime `db:"created_at"`
 	UpdatedAt        sql.NullTime `db:"updated_at"`
+	UserId           string       `db:"user_id"`
 }
 
 type Gender string
 
 const (
 	Male   Gender = "male"
-	Female Gender = "Female"
+	Female Gender = "female"
 )
 
 func (a Gender) IsValid() bool {
@@ -35,13 +36,14 @@ func (a Gender) IsValid() bool {
 type EmployeeRepository interface {
 	Save(ctx context.Context, employee *Employee) error
 	Update(ctx context.Context, employee *Employee) error
-	FindById(ctx context.Context, id string) (Employee, error)
+	FindById(ctx context.Context, departmentId, identityNumber string) (Employee, error)
+	ExistsDepartmentId(ctx context.Context, id string) (bool, error)
 	Delete(ctx context.Context, id string) (Employee, error)
 }
 
 type EmployeeService interface {
 	GetEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error)
-	CreateEmployee(ctx context.Context, req dto.EmployeeReq, email string) (dto.EmployeeData, int, error)
-	PatchEmployee(ctx context.Context, req dto.EmployeeReq, email string) (dto.EmployeeData, int, error)
+	CreateEmployee(ctx context.Context, req dto.EmployeeReq, id string) (dto.EmployeeData, int, error)
+	PatchEmployee(ctx context.Context, req dto.EmployeeReq, id string) (dto.EmployeeData, int, error)
 	DeleteEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error)
 }
