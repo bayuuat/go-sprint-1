@@ -12,18 +12,19 @@ type Department struct {
 	Name         string       `db:"name"`
 	CreatedAt    sql.NullTime `db:"created_at"`
 	UpdatedAt    sql.NullTime `db:"updated_at"`
+	UserId       string       `db:"user_id"`
 }
 
 type DepartmentRepository interface {
 	Save(ctx context.Context, department *Department) error
 	Update(ctx context.Context, department *Department) error
-	FindById(ctx context.Context, id string) (Department, error)
+	FindById(ctx context.Context, id string, userId string) (Department, error)
 	Delete(ctx context.Context, id string) (Department, error)
 }
 
 type DepartmentService interface {
 	GetDepartment(ctx context.Context, id string) (dto.DepartmentData, int, error)
-	CreateDepartment(ctx context.Context, req dto.DepartmentReq, email string) (dto.DepartmentData, int, error)
-	PatchDepartment(ctx context.Context, req dto.DepartmentReq, email string) (dto.DepartmentData, int, error)
+	CreateDepartment(ctx context.Context, req dto.DepartmentReq) (dto.DepartmentData, int, error)
+	PatchDepartment(ctx context.Context, req dto.DepartmentReq, id, userId string) (dto.DepartmentData, int, error)
 	DeleteDepartment(ctx context.Context, id string) (dto.DepartmentData, int, error)
 }
