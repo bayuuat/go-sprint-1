@@ -5,5 +5,6 @@ type EmployeeData struct {
 	Name             string `json:"name"`
 	EmployeeImageUri string `json:"employeeImageUri"`
 	Gender           string `json:"gender"`
+	UserId           string `json:"userId"`
 	DepartmentID     string `json:"departmentId"`
 }

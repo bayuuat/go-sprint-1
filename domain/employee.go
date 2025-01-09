@@ -12,6 +12,7 @@ type Employee struct {
 	Name             string       `db:"name"`
 	EmployeeImageUri *string      `db:"employee_image_uri"`
 	Gender           Gender       `db:"gender"`
+	UserId           string       `db:"user_id"`
 	DepartmentId     string       `db:"department_id"`
 	CreatedAt        sql.NullTime `db:"created_at"`
 	UpdatedAt        sql.NullTime `db:"updated_at"`

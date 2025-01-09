@@ -29,8 +29,15 @@ func (d departmentRepository) Update(ctx context.Context, department *domain.Dep
 }
 
 func (d departmentRepository) FindById(ctx context.Context, id string) (domain.Department, error) {
-	// Kerjain disini gan
-	return domain.Department{}, domain.ErrInvalidCredential
+	var department domain.Department
+	found, err := d.db.From("departments").Where(goqu.Ex{"id": id}).ScanStructContext(ctx, &department)
+	if err != nil {
+		return domain.Department{}, err
+	}
+	if !found {
+		return domain.Department{}, domain.ErrNotFound
+	}
+	return department, nil
 }
 
 func (d departmentRepository) Delete(ctx context.Context, id string) (domain.Department, error) {

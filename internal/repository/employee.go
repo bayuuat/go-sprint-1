@@ -19,8 +19,11 @@ func NewEmployee(db *sql.DB) domain.EmployeeRepository {
 }
 
 func (d employeeRepository) Save(ctx context.Context, employee *domain.Employee) error {
-	// Kerjain disini gan
-	return domain.ErrInvalidCredential
+	executor := d.db.Insert("employees").Rows(employee).Executor()
+	_, err := executor.ExecContext(ctx)
+
+	return err
+
 }
 
 func (d employeeRepository) Update(ctx context.Context, employee *domain.Employee) error {

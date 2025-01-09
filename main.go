@@ -23,7 +23,7 @@ func main() {
 	api.NewDepartment(app, departmentService)
 
 	employeeRepository := repository.NewEmployee(dbConnection)
-	employeeService := service.NewEmployee(cnf, employeeRepository)
+	employeeService := service.NewEmployee(cnf, employeeRepository, departmentRepository)
 	api.NewEmployee(app, employeeService)
 
 	_ = app.Listen(cnf.Server.Host + ":" + cnf.Server.Port)
