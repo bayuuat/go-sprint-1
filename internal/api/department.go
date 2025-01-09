@@ -2,14 +2,14 @@ package api
 
 import (
 	"context"
-	"github.com/bayuuat/go-sprint-1/dto"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"time"
 
 	"github.com/bayuuat/go-sprint-1/domain"
+	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/bayuuat/go-sprint-1/internal/middleware"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type departmentApi struct {
@@ -73,10 +73,20 @@ func (da departmentApi) UpdateDepartment(ctx *fiber.Ctx) error {
 }
 
 func (da departmentApi) DeleteDepartment(ctx *fiber.Ctx) error {
-	_, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
+	c, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
 	defer cancel()
 
-	// KERJAIN DISINI BANG
+	id := ctx.Params("id")
 
-	return ctx.Status(400).JSON(fiber.Map{})
+	user := ctx.Locals("jwt").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	user_id := claims["id"].(string)
+
+	res, code, err := da.departmentService.DeleteDepartment(c, user_id, id)
+
+	if err != nil {
+		return ctx.Status(code).JSON(dto.ErrorResponse{Message: err.Error()})
+	}
+
+	return ctx.Status(code).JSON(res)
 }

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log"
 
 	"github.com/bayuuat/go-sprint-1/domain"
 	"github.com/doug-martin/goqu/v9"
@@ -39,7 +41,32 @@ func (d departmentRepository) FindById(ctx context.Context, id, userId string) (
 	return
 }
 
-func (d departmentRepository) Delete(ctx context.Context, id string) (domain.Department, error) {
-	// Kerjain disini gan
-	return domain.Department{}, domain.ErrInvalidCredential
+func (r *departmentRepository) HasEmployees(ctx context.Context, departmentId string) (bool, error) {
+	var count int
+	query := "SELECT COUNT(*) FROM employees WHERE department_id = $1"
+	err := r.db.QueryRowContext(ctx, query, departmentId).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (d departmentRepository) Delete(ctx context.Context, user_id string, id string) error {
+	ds := d.db.From("departments").Where(goqu.Ex{
+		"department_id": id,
+		"user_id":       user_id,
+	})
+
+	sql, _, err := ds.Delete().ToSQL()
+	if err != nil {
+		log.Println("Error generating SQL:", err)
+		return fmt.Errorf("Error generating SQL: %w", err)
+	}
+
+	_, err = d.db.Exec(sql)
+	if err != nil {
+		return fmt.Errorf("Error executing SQL: %w", err)
+	}
+
+	return err
 }

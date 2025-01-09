@@ -61,7 +61,34 @@ func (ds departmentService) PatchDepartment(ctx context.Context, req dto.Departm
 	}, http.StatusOK, nil
 }
 
-func (ds departmentService) DeleteDepartment(ctx context.Context, id string) (dto.DepartmentData, int, error) {
-	// Kerjain disini gan
-	return dto.DepartmentData{}, 400, errors.New("")
+func (ds departmentService) DeleteDepartment(ctx context.Context, user_id string, id string) (dto.DepartmentData, int, error) {
+	department, err := ds.departmentRepository.FindById(ctx, id, user_id)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.DepartmentData{}, http.StatusInternalServerError, err
+	}
+
+	if department.DepartmentId == "" {
+		return dto.DepartmentData{}, http.StatusNotFound, domain.ErrDepartmentNotFound
+	}
+
+	hasEmployees, err := ds.departmentRepository.HasEmployees(ctx, id)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.DepartmentData{}, http.StatusInternalServerError, err
+	}
+
+	if hasEmployees {
+		return dto.DepartmentData{}, http.StatusConflict, domain.ErrDepartmentHasEmployees
+	}
+
+	err = ds.departmentRepository.Delete(ctx, user_id, id)
+	if err != nil {
+		return dto.DepartmentData{}, 500, err
+	}
+
+	return dto.DepartmentData{
+		Id:   department.DepartmentId,
+		Name: department.Name,
+	}, http.StatusOK, nil
 }

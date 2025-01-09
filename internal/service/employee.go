@@ -89,7 +89,27 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 	}, http.StatusOK, nil
 }
 
-func (ds employeeService) DeleteEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error) {
-	// Kerjain disini gan
-	return dto.EmployeeData{}, 400, errors.New("")
+func (ds employeeService) DeleteEmployee(ctx context.Context, user_id string, id string) (dto.EmployeeData, int, error) {
+	employee, err := ds.employeeRepository.FindById(ctx, user_id, id)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.EmployeeData{}, http.StatusInternalServerError, err
+	}
+
+	if employee.IdentityNumber == "" {
+		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrEmployeeNotFound
+	}
+
+	err = ds.employeeRepository.Delete(ctx, user_id, id)
+	if err != nil {
+		return dto.EmployeeData{}, 500, err
+	}
+
+	return dto.EmployeeData{
+		IdentityNumber:   employee.IdentityNumber,
+		Name:             employee.Name,
+		EmployeeImageUri: *employee.EmployeeImageUri,
+		Gender:           string(employee.Gender),
+		DepartmentID:     employee.DepartmentId,
+	}, http.StatusOK, nil
 }
