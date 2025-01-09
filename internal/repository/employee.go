@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-
 	"github.com/bayuuat/go-sprint-1/domain"
 	"github.com/doug-martin/goqu/v9"
 )
@@ -24,25 +23,30 @@ func (d employeeRepository) Save(ctx context.Context, employee *domain.Employee)
 }
 
 func (d employeeRepository) Update(ctx context.Context, employee *domain.Employee) error {
-	// Kerjain disini gan
-	return domain.ErrInvalidCredential
+	executor := d.db.Update("employees").Where(goqu.Ex{
+		"user_id":         employee.UserId,
+		"identity_number": employee.IdentityNumber,
+	}).Set(employee).Executor()
+	_, err := executor.ExecContext(ctx)
+	return err
 }
 
-func (d employeeRepository) FindById(ctx context.Context, departmentId, identityNumber string) (employee domain.Employee, err error) {
+func (d employeeRepository) FindById(ctx context.Context, identityNumber, userId string) (employee domain.Employee, err error) {
 	dataset := d.db.From("employees").Where(goqu.Ex{
-		"department_id":   departmentId,
+		"user_id":         userId,
 		"identity_number": identityNumber,
 	})
 	_, err = dataset.ScanStructContext(ctx, &employee)
 
-	return domain.Employee{}, domain.ErrInvalidCredential
+	return employee, nil
 }
 
-func (d employeeRepository) ExistsDepartmentId(ctx context.Context, id string) (bool, error) {
+func (d employeeRepository) ExistsDepartmentId(ctx context.Context, id, userId string) (bool, error) {
 	var department domain.Department
 
 	dataset := d.db.From("departments").Where(goqu.Ex{
-		"department_id": id,
+		"department_id": goqu.L(id),
+		"user_id":       userId,
 	})
 	_, err := dataset.ScanStructContext(ctx, &department)
 
@@ -50,7 +54,7 @@ func (d employeeRepository) ExistsDepartmentId(ctx context.Context, id string) (
 		return false, err
 	}
 
-	departmentIdExists := department.DepartmentId == ""
+	departmentIdExists := department.DepartmentId != ""
 
 	return departmentIdExists, nil
 }

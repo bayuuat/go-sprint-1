@@ -52,9 +52,11 @@ func (a authApi) GetUser(ctx *fiber.Ctx) error {
 	c, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
 	defer cancel()
 
+	// Get email claims
 	user := ctx.Locals("jwt").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	email := claims["email"].(string)
+
 	res, code, err := a.authService.GetUser(c, email)
 
 	if err != nil {

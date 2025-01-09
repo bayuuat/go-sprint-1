@@ -24,15 +24,16 @@ func (d departmentRepository) Save(ctx context.Context, department *domain.Depar
 }
 
 func (d departmentRepository) Update(ctx context.Context, department *domain.Department) error {
-	executor := d.db.Update("departments").Where(goqu.C("department_id").Eq(department.DepartmentId)).Set(department).Executor()
+	executor := d.db.Update("departments").Where(goqu.C("department_id").Eq(goqu.L(department.DepartmentId))).Set(department).Executor()
 	_, err := executor.ExecContext(ctx)
 
 	return err
 }
 
-func (d departmentRepository) FindById(ctx context.Context, id string) (department domain.Department, err error) {
+func (d departmentRepository) FindById(ctx context.Context, id, userId string) (department domain.Department, err error) {
 	dataset := d.db.From("departments").Where(goqu.Ex{
-		"department_id": id,
+		"department_id": goqu.L(id),
+		"user_id":       userId,
 	})
 	_, err = dataset.ScanStructContext(ctx, &department)
 	return

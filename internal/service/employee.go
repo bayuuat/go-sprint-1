@@ -34,37 +34,44 @@ func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeRe
 	return dto.EmployeeData{}, 400, errors.New("")
 }
 
-func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq, identityNumber string) (dto.EmployeeData, int, error) {
-	employee, err := ds.employeeRepository.FindById(ctx, identityNumber)
+func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq, identityNumber, userId string) (dto.EmployeeData, int, error) {
+	employee, err := ds.employeeRepository.FindById(ctx, identityNumber, userId)
 
-	targetId := req.IdentityNumber
-	targetEmployee, err := ds.employeeRepository.FindById(ctx, targetId)
+	targetIdentityNumber := req.IdentityNumber
+	targetEmployee, err := ds.employeeRepository.FindById(ctx, targetIdentityNumber, userId)
 
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
 		return dto.EmployeeData{}, http.StatusInternalServerError, err
 	}
 
+	// IdentityNumber params not found
 	if employee.IdentityNumber == "" {
-		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrDepartmentNotFound
+		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrIdentityNumberNotFound
 	}
 
-	if targetEmployee.IdentityNumber != "" {
+	// Target IdentityNumber already taken
+	if targetEmployee.IdentityNumber != "" && targetEmployee.IdentityNumber != employee.IdentityNumber {
 		return dto.EmployeeData{}, http.StatusConflict, domain.ErrEmployeeExists
 	}
 
-	departmentIdExists, err := ds.employeeRepository.ExistsDepartmentId(ctx, req.DepartmentID)
+	departmentIdExists, err := ds.employeeRepository.ExistsDepartmentId(ctx, req.DepartmentID, userId)
 
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
 		return dto.EmployeeData{}, http.StatusInternalServerError, err
 	}
 
+	// Target departmentId not exists
 	if !departmentIdExists {
 		return dto.EmployeeData{}, http.StatusBadRequest, domain.ErrDepartmentNotFound
 	}
 
+	employee.IdentityNumber = req.IdentityNumber
 	employee.Name = req.Name
+	employee.EmployeeImageUri = &req.EmployeeImageUri
+	employee.Gender = domain.Gender(req.Gender)
+	employee.DepartmentId = req.DepartmentID
 
 	err = ds.employeeRepository.Update(ctx, &employee)
 
@@ -74,8 +81,11 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 	}
 
 	return dto.EmployeeData{
-		Id:   employee.DepartmentId,
-		Name: employee.Name,
+		IdentityNumber:   employee.DepartmentId,
+		Name:             employee.Name,
+		EmployeeImageUri: *employee.EmployeeImageUri,
+		Gender:           string(employee.Gender),
+		DepartmentID:     employee.DepartmentId,
 	}, http.StatusOK, nil
 }
 
