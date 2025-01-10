@@ -19,8 +19,10 @@ func NewDepartment(db *sql.DB) domain.DepartmentRepository {
 }
 
 func (d departmentRepository) Save(ctx context.Context, department *domain.Department) error {
-	// Kerjain disini gan
-	return domain.ErrInvalidCredential
+	executor := d.db.Insert("departments").Rows(department).Executor()
+	_, err := executor.ExecContext(ctx)
+
+	return err
 }
 
 func (d departmentRepository) Update(ctx context.Context, department *domain.Department) error {

@@ -10,6 +10,7 @@ import (
 type Department struct {
 	DepartmentId string       `db:"department_id"`
 	Name         string       `db:"name"`
+	UserId       string       `db:"user_id"`
 	CreatedAt    sql.NullTime `db:"created_at"`
 	UpdatedAt    sql.NullTime `db:"updated_at"`
 }

@@ -53,19 +53,12 @@ func (da employeeApi) CreateEmployee(ctx *fiber.Ctx) error {
 
 	fails := utils.Validate(req)
 	if len(fails) > 0 {
-		var errMsg string
-		for field, err := range fails {
-			errMsg += field + ": " + err + "; "
-		}
-		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Validation error: " + errMsg))
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Invalid request"))
 	}
 
 	id, msg, err := da.employeeService.CreateEmployee(ctx.Context(), req, req.Name)
 	if err != nil {
-		if err.Error() == "identity number conflict" {
-			return ctx.Status(http.StatusConflict).JSON(dto.NewErrorResponse("Conflict: identity number"))
-		}
-		return ctx.Status(http.StatusInternalServerError).JSON(dto.NewErrorResponse("Server error: " + err.Error()))
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse(strconv.Itoa(msg) + err.Error() + "disini"))
 	}
 
 	return ctx.Status(http.StatusCreated).JSON(dto.NewSuccessCreateResponse((strconv.Itoa(msg)), id))

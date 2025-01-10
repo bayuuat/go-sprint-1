@@ -28,8 +28,21 @@ func (ds departmentService) GetDepartment(ctx context.Context, id string) (dto.D
 }
 
 func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq, email string) (dto.DepartmentData, int, error) {
-	// Kerjain disini gan
-	return dto.DepartmentData{}, 400, errors.New("")
+	department := domain.Department{
+		Name: req.Name,
+		UserId: req.UserId,
+	}
+
+	err := ds.departmentRepository.Save(ctx, &department)
+	if err != nil {
+		return dto.DepartmentData{}, 400, err
+	}
+
+	return dto.DepartmentData{
+		DepartmentId: department.DepartmentId,
+		Name: department.Name,
+		UserId: department.UserId,
+	}, 201, nil
 }
 
 func (ds departmentService) PatchDepartment(ctx context.Context, req dto.DepartmentReq, email string) (dto.DepartmentData, int, error) {
