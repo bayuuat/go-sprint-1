@@ -57,7 +57,7 @@ func (ds departmentService) CreateDepartment(ctx context.Context, req dto.Depart
 	return dto.DepartmentData{}, 400, errors.New("")
 }
 
-func (ds departmentService) PatchDepartment(ctx context.Context, req dto.DepartmentReq, id, userId string) (dto.DepartmentData, int, error) {
+func (ds departmentService) PatchDepartment(ctx context.Context, req dto.UpdateDepartmentReq, id, userId string) (dto.DepartmentData, int, error) {
 	department, err := ds.departmentRepository.FindById(ctx, id, userId)
 
 	if err != nil {
@@ -67,6 +67,13 @@ func (ds departmentService) PatchDepartment(ctx context.Context, req dto.Departm
 
 	if department.DepartmentId == "" {
 		return dto.DepartmentData{}, http.StatusNotFound, domain.ErrDepartmentNotFound
+	}
+
+	if req.Name == "" {
+		return dto.DepartmentData{
+			Id:   department.DepartmentId,
+			Name: department.Name,
+		}, http.StatusOK, nil
 	}
 
 	department.Name = req.Name
