@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"database/sql"
+
 	"github.com/bayuuat/go-sprint-1/domain"
+	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/doug-martin/goqu/v9"
 )
 
@@ -62,4 +64,52 @@ func (d employeeRepository) ExistsDepartmentId(ctx context.Context, id, userId s
 func (d employeeRepository) Delete(ctx context.Context, id string) (domain.Employee, error) {
 	// Kerjain disini gan
 	return domain.Employee{}, domain.ErrInvalidCredential
+}
+
+func (d employeeRepository) FindByUserId(ctx context.Context, userId string) (result []domain.Employee, err error) {
+	dataset := d.db.From("employees").Where(goqu.C("user_id").Eq(userId))
+	err = dataset.ScanStructsContext(ctx, &result)
+	return
+}
+
+func (d employeeRepository) FindEmployees(
+	ctx context.Context,
+	filter dto.EmployeeFilter) ([]domain.Employee, error) {
+	dataset := d.db.From("employees").Where(goqu.C("user_id").Eq(filter.UserId))
+
+	if filter.IdentityNumber != "" {
+		dataset = dataset.Where(goqu.C("identity_number").ILike(filter.IdentityNumber))
+	}
+
+	if filter.Name != "" {
+		dataset = dataset.Where(goqu.C("name").ILike("%" + filter.Name + "%"))
+	}
+
+	if filter.Gender != "" {
+		if filter.Gender == "male" || filter.Gender == "female" {
+			dataset = dataset.Where(goqu.C("gender").Eq(filter.Gender))
+		} else {
+			return []domain.Employee{}, nil
+		}
+	}
+
+	if filter.DepartmentID != "" {
+		dataset = dataset.Where(goqu.C("department_id").Eq(filter.DepartmentID))
+	}
+
+	if filter.Limit <= 0 {
+		filter.Limit = 5
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	dataset = dataset.Limit(uint(filter.Limit)).Offset(uint(filter.Offset))
+
+	var employees []domain.Employee
+	err := dataset.ScanStructsContext(ctx, &employees)
+	if err != nil {
+		return nil, err
+	}
+
+	return employees, nil
 }
