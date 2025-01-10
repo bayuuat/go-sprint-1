@@ -43,7 +43,7 @@ func (a authApi) authenticate(ctx *fiber.Ctx) error {
 	}
 
 	if err := utils.Validate(req); err != nil {
-		return ctx.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"error": err})
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err})
 	}
 
 	res, code, err := a.authService.Authenticate(c, req)
@@ -88,7 +88,7 @@ func (a authApi) UpdateUser(ctx *fiber.Ctx) error {
 
 	if err := utils.Validate(req); err != nil {
 		fmt.Print(err)
-		return ctx.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"error": err})
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err})
 	}
 
 	res, code, err := a.authService.PatchUser(c, req, id)

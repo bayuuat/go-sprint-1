@@ -29,11 +29,11 @@ func (d employeeRepository) Save(ctx context.Context, employee *domain.Employee)
 
 }
 
-func (d employeeRepository) Update(ctx context.Context, employee *domain.Employee) error {
+func (d employeeRepository) Update(ctx context.Context, userId string, identityNumber string, employeePatch map[string]interface{}) error {
 	executor := d.db.Update("employees").Where(goqu.Ex{
-		"user_id":         employee.UserId,
-		"identity_number": employee.IdentityNumber,
-	}).Set(employee).Executor()
+		"user_id":         userId,
+		"identity_number": identityNumber,
+	}).Set(employeePatch).Executor()
 	_, err := executor.ExecContext(ctx)
 	return err
 }
@@ -55,6 +55,7 @@ func (d employeeRepository) ExistsDepartmentId(ctx context.Context, id, userId s
 		"department_id": goqu.L(id),
 		"user_id":       userId,
 	})
+
 	_, err := dataset.ScanStructContext(ctx, &department)
 
 	if err != nil {
