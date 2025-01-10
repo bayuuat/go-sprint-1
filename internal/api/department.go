@@ -82,7 +82,7 @@ func (da departmentApi) UpdateDepartment(ctx *fiber.Ctx) error {
 	claims := user.Claims.(jwt.MapClaims)
 	userId := claims["id"].(string)
 
-	var req dto.DepartmentReq
+	var req dto.UpdateDepartmentReq
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.SendStatus(http.StatusUnprocessableEntity)
 	}
