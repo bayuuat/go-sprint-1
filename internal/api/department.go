@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"github.com/bayuuat/go-sprint-1/internal/utils"
 	"net/http"
 	"strconv"
 	"time"
@@ -85,6 +86,11 @@ func (da departmentApi) UpdateDepartment(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.SendStatus(http.StatusUnprocessableEntity)
 	}
+
+	if err := utils.Validate(req); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err})
+	}
+
 	res, code, err := da.departmentService.PatchDepartment(c, req, ctx.Params("id"), userId)
 
 	if err != nil {

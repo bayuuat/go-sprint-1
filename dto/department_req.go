@@ -1,7 +1,7 @@
 package dto
 
 type DepartmentReq struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required,min=4,max=33"`
 }
 
 type DepartmentFilter struct {

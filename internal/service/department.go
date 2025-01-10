@@ -69,6 +69,13 @@ func (ds departmentService) PatchDepartment(ctx context.Context, req dto.Departm
 		return dto.DepartmentData{}, http.StatusNotFound, domain.ErrDepartmentNotFound
 	}
 
+	if req.Name == "" {
+		return dto.DepartmentData{
+			Id:   department.DepartmentId,
+			Name: department.Name,
+		}, http.StatusOK, nil
+	}
+
 	department.Name = req.Name
 
 	err = ds.departmentRepository.Update(ctx, &department)
