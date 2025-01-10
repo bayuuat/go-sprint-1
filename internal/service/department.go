@@ -39,20 +39,48 @@ func NewDepartment(cnf *config.Config,
 // 	return departementData, http.StatusOK, nil
 // }
 
-func (ds departmentService) GetDepartment(ctx context.Context, id, userId string) (dto.DepartmentData, int, error) {
-	departement, err := ds.departmentRepository.FindById(ctx, id, userId)
+func (ds departmentService) GetDepartmentByUserId(ctx context.Context, userId string) ([]dto.DepartmentData, int, error) {
+	departement, err := ds.departmentRepository.FindByUserId(ctx, userId)
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
-		return dto.DepartmentData{}, http.StatusInternalServerError, err
+		return nil, http.StatusInternalServerError, err
+	}
+	var departementData []dto.DepartmentData
+	for _, v := range departement {
+		departementData = append(departementData, dto.DepartmentData{
+			Id:   v.DepartmentId,
+			Name: v.Name,
+		})
+	}
+	return departementData, http.StatusOK, nil
+}
+
+func (ds departmentService) GetDepartmentsWithFilter(ctx context.Context, filter dto.DepartmentFilter) ([]dto.DepartmentData, int, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 5
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
 	}
 
-	if departement.DepartmentId == "" {
-		return dto.DepartmentData{}, http.StatusNotFound, domain.ErrDepartmentNotFound
+	departments, err := ds.departmentRepository.FindAllWithFilter(ctx, &filter)
+	if err != nil {
+		return nil, http.StatusInternalServerError, err
 	}
-	return dto.DepartmentData{
-		Id:   departement.DepartmentId,
-		Name: departement.Name,
-	}, http.StatusOK, nil
+
+	if len(departments) == 0 {
+		return []dto.DepartmentData{}, http.StatusOK, nil
+	}
+
+	var departmentData []dto.DepartmentData
+	for _, v := range departments {
+		departmentData = append(departmentData, dto.DepartmentData{
+			Id:   v.DepartmentId,
+			Name: v.Name,
+		})
+	}
+
+	return departmentData, http.StatusOK, nil
 }
 
 func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq) (dto.DepartmentData, int, error) {

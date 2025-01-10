@@ -2,10 +2,12 @@ package api
 
 import (
 	"context"
-	"github.com/bayuuat/go-sprint-1/dto"
-	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"net/http"
 	"time"
+
+	"github.com/bayuuat/go-sprint-1/dto"
+	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/bayuuat/go-sprint-1/domain"
 	"github.com/bayuuat/go-sprint-1/internal/middleware"
@@ -28,17 +30,73 @@ func NewEmployee(app *fiber.App,
 	user.Use(middleware.JWTProtected)
 	user.Post("/", da.CreateEmployee)
 	user.Get("/", da.GetEmployee)
+	// user.Get("/", da.GetEmployeeByUserId)
 	user.Patch("/:id", da.UpdateEmployee)
 	user.Delete("/:id", da.DeleteEmployee)
 }
+
+// func (da employeeApi) GetEmployeeByUserId(ctx *fiber.Ctx) error {
+// 	c, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
+// 	defer cancel()
+
+// 	// Get user_id claims
+// 	user := ctx.Locals("jwt").(*jwt.Token)
+// 	claims := user.Claims.(jwt.MapClaims)
+// 	userId := claims["id"].(string)
+
+// 	res, code, err := da.employeeService.GetEmployeeByUserId(c, userId)
+
+// 	if err != nil {
+// 		return ctx.Status(code).JSON(dto.ErrorResponse{Message: err.Error()})
+// 	}
+
+// 	return ctx.Status(code).JSON(res)
+// }
 
 func (da employeeApi) GetEmployee(ctx *fiber.Ctx) error {
 	_, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
 	defer cancel()
 
-	// KERJAIN DISINI BANG
+	user := ctx.Locals("jwt").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userId := claims["id"].(string)
 
-	return ctx.Status(400).JSON(fiber.Map{})
+	limit := ctx.QueryInt("limit", 5)
+	offset := ctx.QueryInt("offset", 0)
+	name := ctx.Query("name", "")
+	identityNumber := ctx.Query("identity_number", "")
+	gender := ctx.Query("gender", "")
+	departmentId := ctx.Query("department_id", "")
+
+	filter := dto.EmployeeFilter{
+		Limit:          limit,
+		Offset:         offset,
+		Name:           name,
+		UserId:         userId,
+		IdentityNumber: identityNumber,
+		Gender:         gender,
+		DepartmentID:   departmentId,
+	}
+
+	employees, err := da.employeeService.GetEmployees(ctx.Context(), filter)
+	if err != nil {
+		log.Println("Error getting employees:", err)
+		return ctx.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Internal server error",
+		})
+	}
+
+	if len(employees) == 0 {
+		return ctx.Status(200).JSON(fiber.Map{
+			"message": "No employees found",
+			"data":    []interface{}{},
+		})
+	}
+
+	return ctx.Status(200).JSON(fiber.Map{
+		"message": "Employees retrieved successfully",
+		"data":    employees,
+	})
 }
 
 func (da employeeApi) CreateEmployee(ctx *fiber.Ctx) error {
