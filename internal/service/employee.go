@@ -65,6 +65,11 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 		return dto.EmployeeData{}, http.StatusInternalServerError, err
 	}
 
+	// IdentityNumber not found in db
+	if employee.IdentityNumber == "" {
+		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrIdentityNumberNotFound
+	}
+
 	if len(employeePatch) == 0 {
 		return dto.EmployeeData{
 			IdentityNumber:   employee.IdentityNumber,
@@ -80,11 +85,6 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
 		return dto.EmployeeData{}, http.StatusInternalServerError, err
-	}
-
-	// IdentityNumber not found in db
-	if employee.IdentityNumber == "" {
-		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrIdentityNumberNotFound
 	}
 
 	// Target IdentityNumber already taken
