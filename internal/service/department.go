@@ -24,9 +24,35 @@ func NewDepartment(cnf *config.Config,
 	}
 }
 
-func (ds departmentService) GetDepartment(ctx context.Context, id string) (dto.DepartmentData, int, error) {
-	// Kerjain disini gan
-	return dto.DepartmentData{}, 400, errors.New("")
+// func (ds departmentService) Index(ctx context.Context) ([]dto.DepartmentData, int, error) {
+// 	departement, err := ds.departmentRepository.FindAll(ctx)
+// 	if err != nil {
+// 		return nil, http.StatusInternalServerError, err
+// 	}
+// 	var departementData []dto.DepartmentData
+// 	for _, v := range departement {
+// 		departementData = append(departementData, dto.DepartmentData{
+// 			Id:   v.DepartmentId,
+// 			Name: v.Name,
+// 		})
+// 	}
+// 	return departementData, http.StatusOK, nil
+// }
+
+func (ds departmentService) GetDepartment(ctx context.Context, id, userId string) (dto.DepartmentData, int, error) {
+	departement, err := ds.departmentRepository.FindById(ctx, id, userId)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.DepartmentData{}, http.StatusInternalServerError, err
+	}
+
+	if departement.DepartmentId == "" {
+		return dto.DepartmentData{}, http.StatusNotFound, domain.ErrDepartmentNotFound
+	}
+	return dto.DepartmentData{
+		Id:   departement.DepartmentId,
+		Name: departement.Name,
+	}, http.StatusOK, nil
 }
 
 func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq) (dto.DepartmentData, int, error) {

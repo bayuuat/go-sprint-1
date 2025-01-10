@@ -43,3 +43,9 @@ func (d departmentRepository) Delete(ctx context.Context, id string) (domain.Dep
 	// Kerjain disini gan
 	return domain.Department{}, domain.ErrInvalidCredential
 }
+
+func (d departmentRepository) FindAll(ctx context.Context) (result []domain.Department, err error) {
+	dataset := d.db.From("departments").Where(goqu.C("created_at").IsNotNull())
+	err = dataset.ScanStructsContext(ctx, &result)
+	return
+}
