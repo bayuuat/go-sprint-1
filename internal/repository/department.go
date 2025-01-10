@@ -22,7 +22,11 @@ func NewDepartment(db *sql.DB) domain.DepartmentRepository {
 }
 
 func (d departmentRepository) Save(ctx context.Context, department *domain.Department) error {
-	executor := d.db.Insert("departments").Rows(department).Executor()
+	executor := d.db.Insert("departments").Rows(goqu.Record{
+		"name":          department.Name,
+		"user_id":       department.UserId,
+	}).Executor()
+	fmt.Println(executor.ToSQL())
 	_, err := executor.ExecContext(ctx)
 
 	return err

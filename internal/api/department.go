@@ -70,7 +70,7 @@ func (da departmentApi) CreateDepartment(ctx *fiber.Ctx) error {
 
 	var req dto.DepartmentReq
 	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.Status(http.StatusUnprocessableEntity).JSON(dto.NewErrorResponse("Invalid request:" + err.Error()))
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Invalid request:" + err.Error()))
 	}
 
 	fails := utils.Validate(req)
@@ -79,17 +79,23 @@ func (da departmentApi) CreateDepartment(ctx *fiber.Ctx) error {
 		for field, err := range fails {
 			errMsg += field + ": " + err + "; "
 		}
-		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Validation error: " + errMsg))
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Validation error:  " + errMsg))
 	}
 
-	_, _, err := da.departmentService.CreateDepartment(ctx.Context(), req)
+	user := ctx.Locals("jwt").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userId := claims["id"].(string)
+	res, _, err := da.departmentService.CreateDepartment(ctx.Context(), req, userId)
 	if err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
-	return ctx.Status(201).JSON(fiber.Map{})
+	return ctx.Status(201).JSON(fiber.Map{
+		"departmentId": res.DepartmentId,
+		"name":		  res.Name,
+	})
 }
 
 func (da departmentApi) UpdateDepartment(ctx *fiber.Ctx) error {

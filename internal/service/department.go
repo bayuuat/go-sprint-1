@@ -51,10 +51,10 @@ func (ds departmentService) GetDepartmentsWithFilter(ctx context.Context, filter
 	return departmentData, http.StatusOK, nil
 }
 
-func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq) (dto.DepartmentData, int, error) {
+func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq, UserId string) (dto.DepartmentData, int, error) {
 	department := domain.Department{
 		Name: req.Name,
-		UserId: req.UserId,
+		UserId: UserId,
 	}
 
 	err := ds.departmentRepository.Save(ctx, &department)

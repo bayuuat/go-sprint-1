@@ -1,8 +1,7 @@
 package dto
 
 type DepartmentReq struct {
-	Name   string `json:"name" validate:"required"`
-	UserId string `json:"userId" validate:"required,uuid"`
+	Name   string `json:"name" validate:"required,min=4,max=33"`
 }
 
 type DepartmentFilter struct {
