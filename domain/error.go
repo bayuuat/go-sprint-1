@@ -2,6 +2,7 @@ package domain
 
 import "errors"
 
+var ErrBadRequest = errors.New("bad request")
 var ErrUserNotFound = errors.New("user not found")
 var ErrIdentityNumberNotFound = errors.New("identity number not found")
 var ErrDepartmentNotFound = errors.New("department not found")

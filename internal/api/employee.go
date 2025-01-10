@@ -63,7 +63,15 @@ func (da employeeApi) UpdateEmployee(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.SendStatus(http.StatusUnprocessableEntity)
 	}
-	res, code, err := da.employeeService.PatchEmployee(c, req, ctx.Params("id"), userId)
+
+	employeePatch, err := req.Validate()
+
+	// invalid request
+	if err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(dto.ErrorResponse{Message: domain.ErrBadRequest.Error()})
+	}
+
+	res, code, err := da.employeeService.PatchEmployee(c, req, ctx.Params("id"), userId, employeePatch)
 
 	if err != nil {
 		return ctx.Status(code).JSON(dto.ErrorResponse{Message: err.Error()})

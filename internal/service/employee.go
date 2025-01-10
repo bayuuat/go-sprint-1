@@ -34,9 +34,22 @@ func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeRe
 	return dto.EmployeeData{}, 400, errors.New("")
 }
 
-func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq, identityNumber, userId string) (dto.EmployeeData, int, error) {
+func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq, identityNumber, userId string, employeePatch map[string]interface{}) (dto.EmployeeData, int, error) {
 	employee, err := ds.employeeRepository.FindById(ctx, identityNumber, userId)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.EmployeeData{}, http.StatusInternalServerError, err
+	}
 
+	if len(employeePatch) == 0 {
+		return dto.EmployeeData{
+			IdentityNumber:   employee.IdentityNumber,
+			Name:             employee.Name,
+			EmployeeImageUri: *employee.EmployeeImageUri,
+			Gender:           string(employee.Gender),
+			DepartmentID:     employee.DepartmentId,
+		}, http.StatusOK, nil
+	}
 	targetIdentityNumber := req.IdentityNumber
 	targetEmployee, err := ds.employeeRepository.FindById(ctx, targetIdentityNumber, userId)
 
@@ -45,7 +58,7 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 		return dto.EmployeeData{}, http.StatusInternalServerError, err
 	}
 
-	// IdentityNumber params not found
+	// IdentityNumber not found in db
 	if employee.IdentityNumber == "" {
 		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrIdentityNumberNotFound
 	}
@@ -55,25 +68,43 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 		return dto.EmployeeData{}, http.StatusConflict, domain.ErrEmployeeExists
 	}
 
-	departmentIdExists, err := ds.employeeRepository.ExistsDepartmentId(ctx, req.DepartmentID, userId)
+	if req.DepartmentID != "" {
+		departmentIdExists, err := ds.employeeRepository.ExistsDepartmentId(ctx, req.DepartmentID, userId)
 
-	if err != nil {
-		slog.ErrorContext(ctx, err.Error())
-		return dto.EmployeeData{}, http.StatusInternalServerError, err
+		if err != nil {
+			slog.ErrorContext(ctx, err.Error())
+			return dto.EmployeeData{}, http.StatusInternalServerError, err
+		}
+
+		// Target departmentId not exists
+		if !departmentIdExists {
+			return dto.EmployeeData{}, http.StatusBadRequest, domain.ErrDepartmentNotFound
+		}
+
+		employeePatch["department_id"] = req.DepartmentID
 	}
 
-	// Target departmentId not exists
-	if !departmentIdExists {
-		return dto.EmployeeData{}, http.StatusBadRequest, domain.ErrDepartmentNotFound
+	err = ds.employeeRepository.Update(ctx, userId, employee.IdentityNumber, employeePatch)
+
+	if req.IdentityNumber != "" {
+		employee.IdentityNumber = req.IdentityNumber
 	}
 
-	employee.IdentityNumber = req.IdentityNumber
-	employee.Name = req.Name
-	employee.EmployeeImageUri = &req.EmployeeImageUri
-	employee.Gender = domain.Gender(req.Gender)
-	employee.DepartmentId = req.DepartmentID
+	if req.Name != "" {
+		employee.Name = req.Name
+	}
 
-	err = ds.employeeRepository.Update(ctx, &employee)
+	if req.EmployeeImageUri != "" {
+		employee.EmployeeImageUri = &req.EmployeeImageUri
+	}
+
+	if req.Gender != "" {
+		employee.Gender = domain.Gender(req.Gender)
+	}
+
+	if req.DepartmentID != "" {
+		employee.DepartmentId = req.DepartmentID
+	}
 
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
@@ -81,7 +112,7 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 	}
 
 	return dto.EmployeeData{
-		IdentityNumber:   employee.DepartmentId,
+		IdentityNumber:   employee.IdentityNumber,
 		Name:             employee.Name,
 		EmployeeImageUri: *employee.EmployeeImageUri,
 		Gender:           string(employee.Gender),
