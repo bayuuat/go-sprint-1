@@ -56,11 +56,15 @@ func (ds employeeService) GetEmployees(ctx context.Context, filter dto.EmployeeF
 	return employeeData, nil
 }
 
-func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeReq, email string) (dto.EmployeeData, int, error) {
-	// Check if DepartmentID exists
-	_, err := ds.departmentRepository.FindById(ctx, req.DepartmentID, req.UserId)
+func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeReq, userId string) (dto.EmployeeData, int, error) {
+	departmentIdExists, err := ds.employeeRepository.ExistsDepartmentId(ctx, req.DepartmentID, userId)
 	if err != nil {
-		return dto.EmployeeData{}, 400, errors.New("DepartmentID does not exist")
+		slog.ErrorContext(ctx, err.Error())
+		return dto.EmployeeData{}, 500, err
+	}
+
+	if !departmentIdExists {
+		return dto.EmployeeData{}, 400, errors.New(" Department ID not found")
 	}
 
 	employee := domain.Employee{
@@ -68,7 +72,7 @@ func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeRe
 		Name: req.Name,
 		EmployeeImageUri: &req.EmployeeImageUri,
 		Gender: domain.Gender(req.Gender),
-		UserId: req.UserId,
+		UserId: userId,
 		DepartmentId: req.DepartmentID,
 	}
 
@@ -164,4 +168,18 @@ func (ds employeeService) DeleteEmployee(ctx context.Context, user_id string, id
 		Gender:           string(employee.Gender),
 		DepartmentID:     employee.DepartmentId,
 	}, http.StatusOK, nil
+}
+
+func (ds employeeService) IsEmployeeIDExists(ctx context.Context, identityNumber, userId string) (bool, error) {
+	employee, err := ds.employeeRepository.FindById(ctx, identityNumber, userId)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return false, err
+	}
+
+	if employee.IdentityNumber != "" {
+		return true, nil
+	}
+
+	return false, nil
 }

@@ -47,4 +47,5 @@ type EmployeeService interface {
 	CreateEmployee(ctx context.Context, req dto.EmployeeReq, id string) (dto.EmployeeData, int, error)
 	PatchEmployee(ctx context.Context, req dto.EmployeeReq, identityNumber string, userId string) (dto.EmployeeData, int, error)
 	DeleteEmployee(ctx context.Context, user_id string, id string) (dto.EmployeeData, int, error)
+	IsEmployeeIDExists(ctx context.Context, identityNumber, userId string) (bool, error)
 }

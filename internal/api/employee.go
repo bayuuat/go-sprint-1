@@ -81,22 +81,42 @@ func (da employeeApi) CreateEmployee(ctx *fiber.Ctx) error {
 	_, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
 	defer cancel()
 
+	user := ctx.Locals("jwt").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userId := claims["id"].(string)
+
 	var req dto.EmployeeReq
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.Status(http.StatusUnprocessableEntity).JSON(dto.NewErrorResponse("Invalid request:" + err.Error()))
 	}
 
+	isIDEmployeeExists, err := da.employeeService.IsEmployeeIDExists(ctx.Context(), req.IdentityNumber, userId)
+
+	if err != nil {
+		return ctx.Status(http.StatusInternalServerError).JSON(dto.NewErrorResponse("Internal server error"))
+	}
+
+	if isIDEmployeeExists {
+		return ctx.Status(http.StatusConflict).JSON(dto.NewErrorResponse("Employee ID already exists"))
+	}
+
 	fails := utils.Validate(req)
 	if len(fails) > 0 {
-		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Invalid request"))
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Invalid request" + fmt.Sprint(fails)))
 	}
 
-	id, msg, err := da.employeeService.CreateEmployee(ctx.Context(), req, req.Name)
+	id, msg, err := da.employeeService.CreateEmployee(ctx.Context(), req, userId)
 	if err != nil {
-		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse(strconv.Itoa(msg) + err.Error() + "disini"))
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse(strconv.Itoa(msg) + err.Error()))
 	}
 
-	return ctx.Status(http.StatusCreated).JSON(dto.NewSuccessCreateResponse((strconv.Itoa(msg)), id))
+	return ctx.Status(201).JSON(dto.EmployeeData{
+		IdentityNumber: id.IdentityNumber,
+		Name:           id.Name,
+		EmployeeImageUri: id.EmployeeImageUri,
+		Gender:         id.Gender,
+		DepartmentID:   id.DepartmentID,
+	})
 }
 
 func (da employeeApi) UpdateEmployee(ctx *fiber.Ctx) error {
