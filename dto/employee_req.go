@@ -13,6 +13,16 @@ type EmployeeReq struct {
 	DepartmentID     string `json:"departmentId" validate:"required,uuid"`
 }
 
+type EmployeeFilter struct {
+	Limit          int    `json:"limit"`
+	Offset         int    `json:"offset"`
+	Name           string `json:"name"`
+	UserId         string `json:"user_id"`
+	IdentityNumber string `json:"identity_number"`
+	Gender         string `json:"gender"`
+	DepartmentID   string `json:"department_id"`
+}
+
 func (req *EmployeeReq) Validate() (result map[string]interface{}, err error) {
 	result = make(map[string]interface{})
 

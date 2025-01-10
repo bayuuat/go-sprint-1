@@ -24,9 +24,33 @@ func NewEmployee(cnf *config.Config,
 	}
 }
 
-func (ds employeeService) GetEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error) {
-	// Kerjain disini gan
-	return dto.EmployeeData{}, 400, errors.New("")
+func (ds employeeService) GetEmployees(ctx context.Context, filter dto.EmployeeFilter) ([]dto.EmployeeData, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 5
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+
+	employees, err := ds.employeeRepository.FindEmployees(ctx, filter)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return nil, err
+	}
+
+	var employeeData []dto.EmployeeData
+	for _, v := range employees {
+		employeeData = append(employeeData, dto.EmployeeData{
+			IdentityNumber:   v.IdentityNumber,
+			Name:             v.Name,
+			EmployeeImageUri: *v.EmployeeImageUri,
+			Gender:           string(v.Gender),
+			DepartmentID:     v.DepartmentId,
+			UserId:           v.UserId,
+		})
+	}
+
+	return employeeData, nil
 }
 
 func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeReq, email string) (dto.EmployeeData, int, error) {
@@ -120,7 +144,27 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 	}, http.StatusOK, nil
 }
 
-func (ds employeeService) DeleteEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error) {
-	// Kerjain disini gan
-	return dto.EmployeeData{}, 400, errors.New("")
+func (ds employeeService) DeleteEmployee(ctx context.Context, user_id string, id string) (dto.EmployeeData, int, error) {
+	employee, err := ds.employeeRepository.FindById(ctx, user_id, id)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.EmployeeData{}, http.StatusInternalServerError, err
+	}
+
+	if employee.IdentityNumber == "" {
+		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrEmployeeNotFound
+	}
+
+	err = ds.employeeRepository.Delete(ctx, user_id, id)
+	if err != nil {
+		return dto.EmployeeData{}, 500, err
+	}
+
+	return dto.EmployeeData{
+		IdentityNumber:   employee.IdentityNumber,
+		Name:             employee.Name,
+		EmployeeImageUri: *employee.EmployeeImageUri,
+		Gender:           string(employee.Gender),
+		DepartmentID:     employee.DepartmentId,
+	}, http.StatusOK, nil
 }

@@ -26,5 +26,7 @@ func main() {
 	employeeService := service.NewEmployee(cnf, employeeRepository)
 	api.NewEmployee(app, employeeService)
 
+	api.NewAws(app)
+
 	_ = app.Listen(cnf.Server.Host + ":" + cnf.Server.Port)
 }
