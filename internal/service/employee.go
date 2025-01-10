@@ -19,7 +19,7 @@ type employeeService struct {
 
 func NewEmployee(cnf *config.Config,
 	employeeRepository domain.EmployeeRepository,
-	departmentRepository domain.DepartmentRepository) domain.EmployeeService { // Add department repository
+	departmentRepository domain.DepartmentRepository) domain.EmployeeService { 
 	return &employeeService{
 		cnf:                cnf,
 		employeeRepository: employeeRepository,
@@ -58,7 +58,7 @@ func (ds employeeService) GetEmployees(ctx context.Context, filter dto.EmployeeF
 
 func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeReq, email string) (dto.EmployeeData, int, error) {
 	// Check if DepartmentID exists
-	_, err := ds.departmentRepository.FindById(ctx, req.DepartmentID)
+	_, err := ds.departmentRepository.FindById(ctx, req.DepartmentID, req.UserId)
 	if err != nil {
 		return dto.EmployeeData{}, 400, errors.New("DepartmentID does not exist")
 	}

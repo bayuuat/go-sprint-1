@@ -16,7 +16,6 @@ type Employee struct {
 	DepartmentId     string       `db:"department_id"`
 	CreatedAt        sql.NullTime `db:"created_at"`
 	UpdatedAt        sql.NullTime `db:"updated_at"`
-	UserId           string       `db:"user_id"`
 }
 
 type Gender string

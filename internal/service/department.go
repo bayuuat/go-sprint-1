@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -44,7 +43,7 @@ func (ds departmentService) GetDepartmentsWithFilter(ctx context.Context, filter
 	var departmentData []dto.DepartmentData
 	for _, v := range departments {
 		departmentData = append(departmentData, dto.DepartmentData{
-			Id:   v.DepartmentId,
+			DepartmentId:   v.DepartmentId,
 			Name: v.Name,
 		})
 	}
@@ -52,7 +51,7 @@ func (ds departmentService) GetDepartmentsWithFilter(ctx context.Context, filter
 	return departmentData, http.StatusOK, nil
 }
 
-func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq, email string) (dto.DepartmentData, int, error) {
+func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq) (dto.DepartmentData, int, error) {
 	department := domain.Department{
 		Name: req.Name,
 		UserId: req.UserId,
@@ -92,7 +91,7 @@ func (ds departmentService) PatchDepartment(ctx context.Context, req dto.Departm
 	}
 
 	return dto.DepartmentData{
-		Id:   department.DepartmentId,
+		DepartmentId:   department.DepartmentId,
 		Name: department.Name,
 	}, http.StatusOK, nil
 }
@@ -124,7 +123,7 @@ func (ds departmentService) DeleteDepartment(ctx context.Context, user_id string
 	}
 
 	return dto.DepartmentData{
-		Id:   department.DepartmentId,
+		DepartmentId:   department.DepartmentId,
 		Name: department.Name,
 	}, http.StatusOK, nil
 }

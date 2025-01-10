@@ -6,10 +6,8 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"net/http"
 	"strconv"
 
-	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/bayuuat/go-sprint-1/domain"

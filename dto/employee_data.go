@@ -7,5 +7,4 @@ type EmployeeData struct {
 	Gender           string `json:"gender"`
 	UserId           string `json:"userId"`
 	DepartmentID     string `json:"departmentId"`
-	UserId           string `json:"userId"`
 }

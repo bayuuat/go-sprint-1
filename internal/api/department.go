@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 	"time"
-	"net/http"
 
 	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/bayuuat/go-sprint-1/domain"
@@ -83,7 +82,7 @@ func (da departmentApi) CreateDepartment(ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Validation error: " + errMsg))
 	}
 
-	_, _, err := da.departmentService.CreateDepartment(ctx.Context(), req, ctx.Locals("email").(string))
+	_, _, err := da.departmentService.CreateDepartment(ctx.Context(), req)
 	if err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
 			"error": err.Error(),
