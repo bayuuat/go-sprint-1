@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/bayuuat/go-sprint-1/domain"
+	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/doug-martin/goqu/v9"
 )
 
@@ -69,4 +70,18 @@ func (d departmentRepository) Delete(ctx context.Context, user_id string, id str
 	}
 
 	return err
+}
+
+func (d departmentRepository) FindAllWithFilter(ctx context.Context, filter *dto.DepartmentFilter) ([]domain.Department, error) {
+	query := d.db.From("departments").Where(goqu.Ex{"user_id": filter.UserId})
+
+	if filter.Name != "" {
+		query = query.Where(goqu.C("name").ILike("%" + filter.Name + "%"))
+	}
+
+	query = query.Limit(uint(filter.Limit)).Offset(uint(filter.Offset))
+
+	var departments []domain.Department
+	err := query.ScanStructsContext(ctx, &departments)
+	return departments, err
 }

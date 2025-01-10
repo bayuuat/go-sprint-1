@@ -24,9 +24,33 @@ func NewEmployee(cnf *config.Config,
 	}
 }
 
-func (ds employeeService) GetEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error) {
-	// Kerjain disini gan
-	return dto.EmployeeData{}, 400, errors.New("")
+func (ds employeeService) GetEmployees(ctx context.Context, filter dto.EmployeeFilter) ([]dto.EmployeeData, error) {
+	if filter.Limit <= 0 {
+		filter.Limit = 5
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+
+	employees, err := ds.employeeRepository.FindEmployees(ctx, filter)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return nil, err
+	}
+
+	var employeeData []dto.EmployeeData
+	for _, v := range employees {
+		employeeData = append(employeeData, dto.EmployeeData{
+			IdentityNumber:   v.IdentityNumber,
+			Name:             v.Name,
+			EmployeeImageUri: *v.EmployeeImageUri,
+			Gender:           string(v.Gender),
+			DepartmentID:     v.DepartmentId,
+			UserId:           v.UserId,
+		})
+	}
+
+	return employeeData, nil
 }
 
 func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeReq, email string) (dto.EmployeeData, int, error) {
