@@ -108,8 +108,8 @@ func (a userService) GetUser(ctx context.Context, email string) (dto.UserData, i
 	}, http.StatusOK, nil
 }
 
-func (a userService) PatchUser(ctx context.Context, req dto.UpdateUserReq, email string) (dto.UserData, int, error) {
-	user, err := a.userRepository.FindByEmail(ctx, email)
+func (a userService) PatchUser(ctx context.Context, req dto.UpdateUserReq, id string) (dto.UserData, int, error) {
+	user, err := a.userRepository.FindById(ctx, id)
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
 		return dto.UserData{}, http.StatusInternalServerError, err
@@ -119,8 +119,12 @@ func (a userService) PatchUser(ctx context.Context, req dto.UpdateUserReq, email
 		return dto.UserData{}, http.StatusNotFound, domain.ErrUserNotFound
 	}
 
-	user.Name = req.Name
-	user.Email = req.Email
+	if req.Name != nil {
+		user.Name = *req.Name
+	}
+	if req.Email != nil {
+		user.Email = *req.Email
+	}
 	user.UserImageUri = req.CompanyImageUri
 	user.CompanyName = req.CompanyName
 	user.CompanyImageUri = req.CompanyImageUri

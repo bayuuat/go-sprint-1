@@ -2,9 +2,10 @@ package config
 
 import (
 	"flag"
-	"github.com/lpernett/godotenv"
 	"log"
 	"os"
+
+	"github.com/lpernett/godotenv"
 )
 
 type Config struct {

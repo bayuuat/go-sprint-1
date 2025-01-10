@@ -2,12 +2,14 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/bayuuat/go-sprint-1/domain"
 	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/bayuuat/go-sprint-1/internal/middleware"
+	"github.com/bayuuat/go-sprint-1/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -39,6 +41,11 @@ func (a authApi) authenticate(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.SendStatus(http.StatusUnprocessableEntity)
 	}
+
+	if err := utils.Validate(req); err != nil {
+		return ctx.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"error": err})
+	}
+
 	res, code, err := a.authService.Authenticate(c, req)
 
 	if err != nil {
@@ -52,9 +59,11 @@ func (a authApi) GetUser(ctx *fiber.Ctx) error {
 	c, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
 	defer cancel()
 
+	// Get email claims
 	user := ctx.Locals("jwt").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	email := claims["email"].(string)
+
 	res, code, err := a.authService.GetUser(c, email)
 
 	if err != nil {
@@ -70,13 +79,19 @@ func (a authApi) UpdateUser(ctx *fiber.Ctx) error {
 
 	user := ctx.Locals("jwt").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	email := claims["email"].(string)
+	id := claims["id"].(string)
 
 	var req dto.UpdateUserReq
 	if err := ctx.BodyParser(&req); err != nil {
 		return ctx.SendStatus(http.StatusUnprocessableEntity)
 	}
-	res, code, err := a.authService.PatchUser(c, req, email)
+
+	if err := utils.Validate(req); err != nil {
+		fmt.Print(err)
+		return ctx.Status(http.StatusUnprocessableEntity).JSON(fiber.Map{"error": err})
+	}
+
+	res, code, err := a.authService.PatchUser(c, req, id)
 
 	if err != nil {
 		return ctx.Status(code).JSON(dto.ErrorResponse{Message: err.Error()})
