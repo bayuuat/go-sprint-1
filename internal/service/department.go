@@ -24,37 +24,6 @@ func NewDepartment(cnf *config.Config,
 	}
 }
 
-// func (ds departmentService) Index(ctx context.Context) ([]dto.DepartmentData, int, error) {
-// 	departement, err := ds.departmentRepository.FindAll(ctx)
-// 	if err != nil {
-// 		return nil, http.StatusInternalServerError, err
-// 	}
-// 	var departementData []dto.DepartmentData
-// 	for _, v := range departement {
-// 		departementData = append(departementData, dto.DepartmentData{
-// 			Id:   v.DepartmentId,
-// 			Name: v.Name,
-// 		})
-// 	}
-// 	return departementData, http.StatusOK, nil
-// }
-
-func (ds departmentService) GetDepartmentByUserId(ctx context.Context, userId string) ([]dto.DepartmentData, int, error) {
-	departement, err := ds.departmentRepository.FindByUserId(ctx, userId)
-	if err != nil {
-		slog.ErrorContext(ctx, err.Error())
-		return nil, http.StatusInternalServerError, err
-	}
-	var departementData []dto.DepartmentData
-	for _, v := range departement {
-		departementData = append(departementData, dto.DepartmentData{
-			Id:   v.DepartmentId,
-			Name: v.Name,
-		})
-	}
-	return departementData, http.StatusOK, nil
-}
-
 func (ds departmentService) GetDepartmentsWithFilter(ctx context.Context, filter dto.DepartmentFilter) ([]dto.DepartmentData, int, error) {
 	if filter.Limit <= 0 {
 		filter.Limit = 5
@@ -115,7 +84,34 @@ func (ds departmentService) PatchDepartment(ctx context.Context, req dto.Departm
 	}, http.StatusOK, nil
 }
 
-func (ds departmentService) DeleteDepartment(ctx context.Context, id string) (dto.DepartmentData, int, error) {
-	// Kerjain disini gan
-	return dto.DepartmentData{}, 400, errors.New("")
+func (ds departmentService) DeleteDepartment(ctx context.Context, user_id string, id string) (dto.DepartmentData, int, error) {
+	department, err := ds.departmentRepository.FindById(ctx, id, user_id)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.DepartmentData{}, http.StatusInternalServerError, err
+	}
+
+	if department.DepartmentId == "" {
+		return dto.DepartmentData{}, http.StatusNotFound, domain.ErrDepartmentNotFound
+	}
+
+	hasEmployees, err := ds.departmentRepository.HasEmployees(ctx, id)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.DepartmentData{}, http.StatusInternalServerError, err
+	}
+
+	if hasEmployees {
+		return dto.DepartmentData{}, http.StatusConflict, domain.ErrDepartmentHasEmployees
+	}
+
+	err = ds.departmentRepository.Delete(ctx, user_id, id)
+	if err != nil {
+		return dto.DepartmentData{}, 500, err
+	}
+
+	return dto.DepartmentData{
+		Id:   department.DepartmentId,
+		Name: department.Name,
+	}, http.StatusOK, nil
 }

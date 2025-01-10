@@ -23,7 +23,7 @@ func main() {
 	api.NewDepartment(app, departmentService)
 
 	employeeRepository := repository.NewEmployee(dbConnection)
-	employeeService := service.NewEmployee(cnf, employeeRepository, departmentRepository)
+	employeeService := service.NewEmployee(cnf, employeeRepository)
 	api.NewEmployee(app, employeeService)
 
 	api.NewAws(app)

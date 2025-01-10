@@ -37,16 +37,14 @@ type EmployeeRepository interface {
 	Save(ctx context.Context, employee *Employee) error
 	Update(ctx context.Context, employee *Employee) error
 	FindById(ctx context.Context, identityNumber, userId string) (Employee, error)
-	FindByUserId(ctx context.Context, userId string) ([]Employee, error)
 	FindEmployees(ctx context.Context, filter dto.EmployeeFilter) ([]Employee, error)
 	ExistsDepartmentId(ctx context.Context, id string, userId string) (bool, error)
-	Delete(ctx context.Context, id string) (Employee, error)
+	Delete(ctx context.Context, user_id string, id string) error
 }
 
 type EmployeeService interface {
-	// GetEmployeeByUserId(ctx context.Context, userId string) ([]dto.EmployeeData, int, error)
-	GetEmployees(ctx context.Context, filter dto.EmployeeFilter) ([]Employee, error)
+	GetEmployees(ctx context.Context, filter dto.EmployeeFilter) ([]dto.EmployeeData, error)
 	CreateEmployee(ctx context.Context, req dto.EmployeeReq, id string) (dto.EmployeeData, int, error)
 	PatchEmployee(ctx context.Context, req dto.EmployeeReq, identityNumber string, userId string) (dto.EmployeeData, int, error)
-	DeleteEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error)
+	DeleteEmployee(ctx context.Context, user_id string, id string) (dto.EmployeeData, int, error)
 }

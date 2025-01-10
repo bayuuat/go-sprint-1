@@ -12,40 +12,19 @@ import (
 )
 
 type employeeService struct {
-	cnf                  *config.Config
-	employeeRepository   domain.EmployeeRepository
-	departmentRepository domain.DepartmentRepository
+	cnf                *config.Config
+	employeeRepository domain.EmployeeRepository
 }
 
 func NewEmployee(cnf *config.Config,
-	employeeRepository domain.EmployeeRepository,
-	departmentRepository domain.DepartmentRepository) domain.EmployeeService {
+	employeeRepository domain.EmployeeRepository) domain.EmployeeService {
 	return &employeeService{
-		cnf:                  cnf,
-		employeeRepository:   employeeRepository,
-		departmentRepository: departmentRepository,
+		cnf:                cnf,
+		employeeRepository: employeeRepository,
 	}
 }
 
-// func (ds employeeService) GetEmployeeByUserId(ctx context.Context, userId string) ([]dto.EmployeeData, int, error) {
-// 	employee, err := ds.employeeRepository.FindByUserId(ctx, userId)
-// 	if err != nil {
-// 		slog.ErrorContext(ctx, err.Error())
-// 		return nil, http.StatusInternalServerError, err
-// 	}
-// 	var employeeData []dto.EmployeeData
-// 	for _, v := range employee {
-// 		employeeData = append(employeeData, dto.EmployeeData{
-// 			IdentityNumber:   v.IdentityNumber,
-// 			Name:             v.Name,
-// 			EmployeeImageUri: *v.EmployeeImageUri,
-// 			DepartmentID:     v.DepartmentId,
-// 		})
-// 	}
-// 	return employeeData, http.StatusOK, nil
-// }
-
-func (ds employeeService) GetEmployees(ctx context.Context, filter dto.EmployeeFilter) ([]domain.Employee, error) {
+func (ds employeeService) GetEmployees(ctx context.Context, filter dto.EmployeeFilter) ([]dto.EmployeeData, error) {
 	if filter.Limit <= 0 {
 		filter.Limit = 5
 	}
@@ -71,19 +50,7 @@ func (ds employeeService) GetEmployees(ctx context.Context, filter dto.EmployeeF
 		})
 	}
 
-	var employeesDomain []domain.Employee
-	for _, v := range employees {
-		employeesDomain = append(employeesDomain, domain.Employee{
-			IdentityNumber:   v.IdentityNumber,
-			Name:             v.Name,
-			EmployeeImageUri: v.EmployeeImageUri,
-			Gender:           v.Gender,
-			DepartmentId:     v.DepartmentId,
-			UserId:           v.UserId,
-		})
-	}
-
-	return employeesDomain, nil
+	return employeeData, nil
 }
 
 func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeReq, email string) (dto.EmployeeData, int, error) {
@@ -146,7 +113,27 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 	}, http.StatusOK, nil
 }
 
-func (ds employeeService) DeleteEmployee(ctx context.Context, id string) (dto.EmployeeData, int, error) {
-	// Kerjain disini gan
-	return dto.EmployeeData{}, 400, errors.New("")
+func (ds employeeService) DeleteEmployee(ctx context.Context, user_id string, id string) (dto.EmployeeData, int, error) {
+	employee, err := ds.employeeRepository.FindById(ctx, user_id, id)
+	if err != nil {
+		slog.ErrorContext(ctx, err.Error())
+		return dto.EmployeeData{}, http.StatusInternalServerError, err
+	}
+
+	if employee.IdentityNumber == "" {
+		return dto.EmployeeData{}, http.StatusNotFound, domain.ErrEmployeeNotFound
+	}
+
+	err = ds.employeeRepository.Delete(ctx, user_id, id)
+	if err != nil {
+		return dto.EmployeeData{}, 500, err
+	}
+
+	return dto.EmployeeData{
+		IdentityNumber:   employee.IdentityNumber,
+		Name:             employee.Name,
+		EmployeeImageUri: *employee.EmployeeImageUri,
+		Gender:           string(employee.Gender),
+		DepartmentID:     employee.DepartmentId,
+	}, http.StatusOK, nil
 }
