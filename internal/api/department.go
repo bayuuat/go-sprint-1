@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bayuuat/go-sprint-1/domain"
 	"github.com/bayuuat/go-sprint-1/dto"
+	"github.com/bayuuat/go-sprint-1/domain"
+	"github.com/bayuuat/go-sprint-1/internal/utils"
 	"github.com/bayuuat/go-sprint-1/internal/middleware"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
@@ -68,9 +69,34 @@ func (da departmentApi) CreateDepartment(ctx *fiber.Ctx) error {
 	_, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
 	defer cancel()
 
-	// KERJAIN DISINI BANG
+	var req dto.DepartmentReq
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Invalid request:" + err.Error()))
+	}
 
-	return ctx.Status(400).JSON(fiber.Map{})
+	fails := utils.Validate(req)
+	if len(fails) > 0 {
+		var errMsg string
+		for field, err := range fails {
+			errMsg += field + ": " + err + "; "
+		}
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Validation error:  " + errMsg))
+	}
+
+	user := ctx.Locals("jwt").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	userId := claims["id"].(string)
+	res, _, err := da.departmentService.CreateDepartment(ctx.Context(), req, userId)
+	if err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return ctx.Status(201).JSON(fiber.Map{
+		"departmentId": res.DepartmentId,
+		"name":		  res.Name,
+	})
 }
 
 func (da departmentApi) UpdateDepartment(ctx *fiber.Ctx) error {

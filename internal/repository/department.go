@@ -22,8 +22,14 @@ func NewDepartment(db *sql.DB) domain.DepartmentRepository {
 }
 
 func (d departmentRepository) Save(ctx context.Context, department *domain.Department) error {
-	// Kerjain disini gan
-	return domain.ErrInvalidCredential
+	executor := d.db.Insert("departments").Rows(goqu.Record{
+		"name":          department.Name,
+		"user_id":       department.UserId,
+	}).Executor()
+	fmt.Println(executor.ToSQL())
+	_, err := executor.ExecContext(ctx)
+
+	return err
 }
 
 func (d departmentRepository) Update(ctx context.Context, department *domain.Department) error {

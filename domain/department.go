@@ -10,9 +10,9 @@ import (
 type Department struct {
 	DepartmentId string       `db:"department_id"`
 	Name         string       `db:"name"`
+	UserId       string       `db:"user_id"`
 	CreatedAt    sql.NullTime `db:"created_at"`
 	UpdatedAt    sql.NullTime `db:"updated_at"`
-	UserId       string       `db:"user_id"`
 }
 
 type DepartmentRepository interface {
@@ -26,7 +26,7 @@ type DepartmentRepository interface {
 
 type DepartmentService interface {
 	GetDepartmentsWithFilter(ctx context.Context, filter dto.DepartmentFilter) ([]dto.DepartmentData, int, error)
-	CreateDepartment(ctx context.Context, req dto.DepartmentReq) (dto.DepartmentData, int, error)
+	CreateDepartment(ctx context.Context, req dto.DepartmentReq, userId string) (dto.DepartmentData, int, error)
 	PatchDepartment(ctx context.Context, req dto.UpdateDepartmentReq, id, userId string) (dto.DepartmentData, int, error)
 	DeleteDepartment(ctx context.Context, user_id string, id string) (dto.DepartmentData, int, error)
 }

@@ -12,10 +12,10 @@ type Employee struct {
 	Name             string       `db:"name"`
 	EmployeeImageUri *string      `db:"employee_image_uri"`
 	Gender           Gender       `db:"gender"`
+	UserId           string       `db:"user_id"`
 	DepartmentId     string       `db:"department_id"`
 	CreatedAt        sql.NullTime `db:"created_at"`
 	UpdatedAt        sql.NullTime `db:"updated_at"`
-	UserId           string       `db:"user_id"`
 }
 
 type Gender string
@@ -47,4 +47,5 @@ type EmployeeService interface {
 	CreateEmployee(ctx context.Context, req dto.EmployeeReq, id string) (dto.EmployeeData, int, error)
 	PatchEmployee(ctx context.Context, req dto.EmployeeReq, identityNumber, userId string, employee map[string]interface{}) (dto.EmployeeData, int, error)
 	DeleteEmployee(ctx context.Context, user_id string, id string) (dto.EmployeeData, int, error)
+	IsEmployeeIDExists(ctx context.Context, identityNumber, userId string) (bool, error)
 }
