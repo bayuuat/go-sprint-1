@@ -21,15 +21,21 @@ func NewDepartment(db *sql.DB) domain.DepartmentRepository {
 	}
 }
 
-func (d departmentRepository) Save(ctx context.Context, department *domain.Department) error {
+func (d departmentRepository) Save(ctx context.Context, department *domain.Department) (*domain.Department, error) {
 	executor := d.db.Insert("departments").Rows(goqu.Record{
-		"name":          department.Name,
-		"user_id":       department.UserId,
-	}).Executor()
-	fmt.Println(executor.ToSQL())
-	_, err := executor.ExecContext(ctx)
+		"name":    department.Name,
+		"user_id": department.UserId,
+	}).Returning("department_id", "name").Executor()
 
-	return err
+	var result domain.Department
+
+	// Execute the query and scan into the struct
+	_, err := executor.ScanStructContext(ctx, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 func (d departmentRepository) Update(ctx context.Context, department *domain.Department) error {

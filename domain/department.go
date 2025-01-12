@@ -16,7 +16,7 @@ type Department struct {
 }
 
 type DepartmentRepository interface {
-	Save(ctx context.Context, department *Department) error
+	Save(ctx context.Context, department *Department) (*Department, error)
 	Update(ctx context.Context, department *Department) error
 	FindAllWithFilter(ctx context.Context, filter *dto.DepartmentFilter) ([]Department, error)
 	FindById(ctx context.Context, id string, userId string) (Department, error)

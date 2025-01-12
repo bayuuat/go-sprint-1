@@ -43,8 +43,8 @@ func (ds departmentService) GetDepartmentsWithFilter(ctx context.Context, filter
 	var departmentData []dto.DepartmentData
 	for _, v := range departments {
 		departmentData = append(departmentData, dto.DepartmentData{
-			DepartmentId:   v.DepartmentId,
-			Name: v.Name,
+			DepartmentId: v.DepartmentId,
+			Name:         v.Name,
 		})
 	}
 
@@ -53,19 +53,18 @@ func (ds departmentService) GetDepartmentsWithFilter(ctx context.Context, filter
 
 func (ds departmentService) CreateDepartment(ctx context.Context, req dto.DepartmentReq, UserId string) (dto.DepartmentData, int, error) {
 	department := domain.Department{
-		Name: req.Name,
+		Name:   req.Name,
 		UserId: UserId,
 	}
 
-	err := ds.departmentRepository.Save(ctx, &department)
+	res, err := ds.departmentRepository.Save(ctx, &department)
 	if err != nil {
 		return dto.DepartmentData{}, 400, err
 	}
 
 	return dto.DepartmentData{
-		DepartmentId: department.DepartmentId,
-		Name: department.Name,
-		UserId: department.UserId,
+		DepartmentId: res.DepartmentId,
+		Name:         res.Name,
 	}, 201, nil
 }
 
@@ -83,8 +82,8 @@ func (ds departmentService) PatchDepartment(ctx context.Context, req dto.UpdateD
 
 	if req.Name == "" {
 		return dto.DepartmentData{
-			Id:   department.DepartmentId,
-			Name: department.Name,
+			DepartmentId: department.DepartmentId,
+			Name:         department.Name,
 		}, http.StatusOK, nil
 	}
 
@@ -98,8 +97,8 @@ func (ds departmentService) PatchDepartment(ctx context.Context, req dto.UpdateD
 	}
 
 	return dto.DepartmentData{
-		DepartmentId:   department.DepartmentId,
-		Name: department.Name,
+		DepartmentId: department.DepartmentId,
+		Name:         department.Name,
 	}, http.StatusOK, nil
 }
 
@@ -130,7 +129,7 @@ func (ds departmentService) DeleteDepartment(ctx context.Context, user_id string
 	}
 
 	return dto.DepartmentData{
-		DepartmentId:   department.DepartmentId,
-		Name: department.Name,
+		DepartmentId: department.DepartmentId,
+		Name:         department.Name,
 	}, http.StatusOK, nil
 }

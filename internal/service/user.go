@@ -119,13 +119,25 @@ func (a userService) PatchUser(ctx context.Context, req dto.UpdateUserReq, id st
 		return dto.UserData{}, http.StatusNotFound, domain.ErrUserNotFound
 	}
 
+	if user.Email != *req.Email {
+		sameEmail, err := a.userRepository.FindByEmail(ctx, *req.Email)
+		if err != nil {
+			slog.ErrorContext(ctx, err.Error())
+			return dto.UserData{}, http.StatusInternalServerError, err
+		}
+
+		if sameEmail.Email != "" {
+			return dto.UserData{}, http.StatusConflict, domain.ErrEmailExists
+		}
+	}
+
 	if req.Name != nil {
 		user.Name = *req.Name
 	}
 	if req.Email != nil {
 		user.Email = *req.Email
 	}
-	user.UserImageUri = req.CompanyImageUri
+	user.UserImageUri = req.UserImageUri
 	user.CompanyName = req.CompanyName
 	user.CompanyImageUri = req.CompanyImageUri
 
