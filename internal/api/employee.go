@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 
@@ -87,7 +87,7 @@ func (da employeeApi) CreateEmployee(ctx *fiber.Ctx) error {
 
 	var req dto.EmployeeReq
 	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.Status(http.StatusUnprocessableEntity).JSON(dto.NewErrorResponse("Invalid request:" + err.Error()))
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Invalid request:" + err.Error()))
 	}
 
 	isIDEmployeeExists, err := da.employeeService.IsEmployeeIDExists(ctx.Context(), req.IdentityNumber, userId)
@@ -111,11 +111,11 @@ func (da employeeApi) CreateEmployee(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(201).JSON(dto.EmployeeData{
-		IdentityNumber: id.IdentityNumber,
-		Name:           id.Name,
+		IdentityNumber:   id.IdentityNumber,
+		Name:             id.Name,
 		EmployeeImageUri: id.EmployeeImageUri,
-		Gender:         id.Gender,
-		DepartmentID:   id.DepartmentID,
+		Gender:           id.Gender,
+		DepartmentID:     id.DepartmentID,
 	})
 }
 

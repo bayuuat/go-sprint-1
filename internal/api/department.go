@@ -2,15 +2,14 @@ package api
 
 import (
 	"context"
-	"github.com/bayuuat/go-sprint-1/internal/utils"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/bayuuat/go-sprint-1/domain"
-	"github.com/bayuuat/go-sprint-1/internal/utils"
+	"github.com/bayuuat/go-sprint-1/dto"
 	"github.com/bayuuat/go-sprint-1/internal/middleware"
+	"github.com/bayuuat/go-sprint-1/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -31,7 +30,17 @@ func NewDepartment(app *fiber.App,
 	user.Use(middleware.JWTProtected)
 	user.Post("/", da.CreateDepartment)
 	user.Get("/", da.GetDepartments)
+	user.Patch("/", func(c *fiber.Ctx) error {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Not Found",
+		})
+	})
 	user.Patch("/:id", da.UpdateDepartment)
+	user.Delete("/", func(c *fiber.Ctx) error {
+		return c.Status(404).JSON(fiber.Map{
+			"error": "Not Found",
+		})
+	})
 	user.Delete("/:id", da.DeleteDepartment)
 }
 
@@ -95,13 +104,27 @@ func (da departmentApi) CreateDepartment(ctx *fiber.Ctx) error {
 
 	return ctx.Status(201).JSON(fiber.Map{
 		"departmentId": res.DepartmentId,
-		"name":		  res.Name,
+		"name":         res.Name,
 	})
 }
 
 func (da departmentApi) UpdateDepartment(ctx *fiber.Ctx) error {
 	c, cancel := context.WithTimeout(ctx.Context(), 10*time.Second)
 	defer cancel()
+
+	departmentId := ctx.Params("id")
+
+	if departmentId == "" {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error": "Not Found",
+		})
+	}
+
+	if _, err := strconv.Atoi(departmentId); err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error": "Not Found",
+		})
+	}
 
 	// Get user_id claims
 	user := ctx.Locals("jwt").(*jwt.Token)
@@ -110,14 +133,14 @@ func (da departmentApi) UpdateDepartment(ctx *fiber.Ctx) error {
 
 	var req dto.UpdateDepartmentReq
 	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.SendStatus(http.StatusUnprocessableEntity)
+		return ctx.SendStatus(http.StatusBadRequest)
 	}
 
 	if err := utils.Validate(req); err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err})
 	}
 
-	res, code, err := da.departmentService.PatchDepartment(c, req, ctx.Params("id"), userId)
+	res, code, err := da.departmentService.PatchDepartment(c, req, departmentId, userId)
 
 	if err != nil {
 		return ctx.Status(code).JSON(dto.ErrorResponse{Message: err.Error()})
@@ -131,6 +154,18 @@ func (da departmentApi) DeleteDepartment(ctx *fiber.Ctx) error {
 	defer cancel()
 
 	id := ctx.Params("id")
+
+	if id == "" {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error": "Not Found",
+		})
+	}
+
+	if _, err := strconv.Atoi(id); err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"error": "Not Found",
+		})
+	}
 
 	user := ctx.Locals("jwt").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)

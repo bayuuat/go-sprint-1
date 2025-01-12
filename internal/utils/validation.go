@@ -2,6 +2,10 @@ package utils
 
 import (
 	"fmt"
+	"net"
+	"net/url"
+	"regexp"
+	"strings"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -21,6 +25,8 @@ func init() {
 	trans, _ = uni.GetTranslator("en")
 	validate = validator.New()
 	enTranslations.RegisterDefaultTranslations(validate, trans)
+
+	validate.RegisterValidation("accessibleuri", validateAccessibleURI)
 }
 
 func Validate[T any](data T) map[string]string {
@@ -37,4 +43,34 @@ func Validate[T any](data T) map[string]string {
 		}
 	}
 	return res
+}
+
+func validateAccessibleURI(fl validator.FieldLevel) bool {
+	uri := fl.Field().String()
+
+	parsedURL, err := url.Parse(uri)
+	if err != nil {
+		return false
+	}
+
+	if !strings.HasPrefix(parsedURL.Scheme, "http") {
+		return false
+	}
+
+	if parsedURL.Host == "" {
+		return false
+	}
+
+	domainRegex := regexp.MustCompile(`^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`)
+
+	host := parsedURL.Host
+	if strings.Contains(host, ":") {
+		host, _, err = net.SplitHostPort(parsedURL.Host)
+		if err != nil {
+			return false
+		}
+	}
+
+	return domainRegex.MatchString(host)
+
 }

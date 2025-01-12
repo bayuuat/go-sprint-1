@@ -83,7 +83,7 @@ func (a authApi) UpdateUser(ctx *fiber.Ctx) error {
 
 	var req dto.UpdateUserReq
 	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.SendStatus(http.StatusUnprocessableEntity)
+		return ctx.SendStatus(http.StatusBadRequest)
 	}
 
 	if err := utils.Validate(req); err != nil {
