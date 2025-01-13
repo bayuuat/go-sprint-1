@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -100,9 +99,12 @@ func (da employeeApi) CreateEmployee(ctx *fiber.Ctx) error {
 		return ctx.Status(http.StatusConflict).JSON(dto.NewErrorResponse("Employee ID already exists"))
 	}
 
-	fails := utils.Validate(req)
-	if len(fails) > 0 {
-		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("Invalid request" + fmt.Sprint(fails)))
+	if err := utils.Validate(req); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err})
+	}
+
+	if valid := middleware.ValidateUrl(req.EmployeeImageUri); !valid {
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("invalid url"))
 	}
 
 	id, msg, err := da.employeeService.CreateEmployee(ctx.Context(), req, userId)
@@ -130,12 +132,19 @@ func (da employeeApi) UpdateEmployee(ctx *fiber.Ctx) error {
 
 	var req dto.EmployeeReq
 	if err := ctx.BodyParser(&req); err != nil {
-		return ctx.SendStatus(http.StatusUnprocessableEntity)
+		return ctx.SendStatus(http.StatusBadRequest)
 	}
 
-	employeePatch, err := req.Validate()
+	if err := utils.Validate(req); err != nil {
+		return ctx.Status(http.StatusBadRequest).JSON(fiber.Map{"error": err})
+	}
+
+	if valid := middleware.ValidateUrl(req.EmployeeImageUri); !valid {
+		return ctx.Status(http.StatusBadRequest).JSON(dto.NewErrorResponse("invalid url"))
+	}
 
 	// invalid request
+	employeePatch, err := req.Validate()
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(dto.ErrorResponse{Message: domain.ErrBadRequest.Error()})
 	}
@@ -158,8 +167,6 @@ func (da employeeApi) DeleteEmployee(ctx *fiber.Ctx) error {
 	user := ctx.Locals("jwt").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
 	user_id := claims["id"].(string)
-
-	fmt.Print(user_id)
 
 	res, code, err := da.employeeService.DeleteEmployee(c, user_id, id)
 

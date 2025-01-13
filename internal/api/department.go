@@ -96,6 +96,7 @@ func (da departmentApi) CreateDepartment(ctx *fiber.Ctx) error {
 	claims := user.Claims.(jwt.MapClaims)
 	userId := claims["id"].(string)
 	res, _, err := da.departmentService.CreateDepartment(ctx.Context(), req, userId)
+
 	if err != nil {
 		return ctx.Status(400).JSON(fiber.Map{
 			"error": err.Error(),
