@@ -35,13 +35,13 @@ func NewDepartment(app *fiber.App,
 			"error": "Not Found",
 		})
 	})
-	user.Patch("/:id", da.UpdateDepartment)
+	user.Patch("/:id?", da.UpdateDepartment)
 	user.Delete("/", func(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{
 			"error": "Not Found",
 		})
 	})
-	user.Delete("/:id", da.DeleteDepartment)
+	user.Delete("/:id?", da.DeleteDepartment)
 }
 
 func (da departmentApi) GetDepartments(ctx *fiber.Ctx) error {

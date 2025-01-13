@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -32,8 +33,8 @@ func NewEmployee(app *fiber.App,
 	user.Use(middleware.JWTProtected)
 	user.Post("/", da.CreateEmployee)
 	user.Get("/", da.GetEmployee)
-	user.Patch("/:id", da.UpdateEmployee)
-	user.Delete("/:id", da.DeleteEmployee)
+	user.Patch("/:id?", da.UpdateEmployee)
+	user.Delete("/:id?", da.DeleteEmployee)
 }
 
 func (da employeeApi) GetEmployee(ctx *fiber.Ctx) error {
@@ -163,6 +164,9 @@ func (da employeeApi) DeleteEmployee(ctx *fiber.Ctx) error {
 	defer cancel()
 
 	id := ctx.Params("id")
+
+	fmt.Println()
+	fmt.Println(id)
 
 	user := ctx.Locals("jwt").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
