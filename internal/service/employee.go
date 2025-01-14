@@ -12,17 +12,17 @@ import (
 )
 
 type employeeService struct {
-	cnf                *config.Config
-	employeeRepository domain.EmployeeRepository
+	cnf                  *config.Config
+	employeeRepository   domain.EmployeeRepository
 	departmentRepository domain.DepartmentRepository // Add department repository
 }
 
 func NewEmployee(cnf *config.Config,
 	employeeRepository domain.EmployeeRepository,
-	departmentRepository domain.DepartmentRepository) domain.EmployeeService { 
+	departmentRepository domain.DepartmentRepository) domain.EmployeeService {
 	return &employeeService{
-		cnf:                cnf,
-		employeeRepository: employeeRepository,
+		cnf:                  cnf,
+		employeeRepository:   employeeRepository,
 		departmentRepository: departmentRepository, // Initialize department repository
 	}
 }
@@ -68,12 +68,12 @@ func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeRe
 	}
 
 	employee := domain.Employee{
-		IdentityNumber: req.IdentityNumber,
-		Name: req.Name,
+		IdentityNumber:   req.IdentityNumber,
+		Name:             req.Name,
 		EmployeeImageUri: &req.EmployeeImageUri,
-		Gender: domain.Gender(req.Gender),
-		UserId: userId,
-		DepartmentId: req.DepartmentID,
+		Gender:           domain.Gender(req.Gender),
+		UserId:           userId,
+		DepartmentId:     req.DepartmentID,
 	}
 
 	err = ds.employeeRepository.Save(ctx, &employee)
@@ -82,11 +82,11 @@ func (ds employeeService) CreateEmployee(ctx context.Context, req dto.EmployeeRe
 	}
 
 	return dto.EmployeeData{
-		IdentityNumber: employee.IdentityNumber,
-		Name: employee.Name,
+		IdentityNumber:   employee.IdentityNumber,
+		Name:             employee.Name,
 		EmployeeImageUri: *employee.EmployeeImageUri,
-		Gender: string(employee.Gender),
-		DepartmentID: employee.DepartmentId,
+		Gender:           string(employee.Gender),
+		DepartmentID:     employee.DepartmentId,
 	}, 201, nil
 }
 
@@ -177,7 +177,7 @@ func (ds employeeService) PatchEmployee(ctx context.Context, req dto.EmployeeReq
 }
 
 func (ds employeeService) DeleteEmployee(ctx context.Context, user_id string, id string) (dto.EmployeeData, int, error) {
-	employee, err := ds.employeeRepository.FindById(ctx, user_id, id)
+	employee, err := ds.employeeRepository.FindById(ctx, id, user_id)
 	if err != nil {
 		slog.ErrorContext(ctx, err.Error())
 		return dto.EmployeeData{}, http.StatusInternalServerError, err
